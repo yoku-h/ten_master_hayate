@@ -83,6 +83,43 @@
   margin:auto;
 }
 
+
+a.help-link,
+a.help-link:link,
+a.help-link:visited,
+a.help-link:hover,
+a.help-link:active {
+  color: #ffffff !important;
+  text-decoration: none !important;
+}
+
+.manual {
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.manual h2 {
+  font-size: 1rem;
+}
+
+.manual h3 {
+  font-size: 0.95rem;
+  margin-top: 12px;
+}
+
+.manual ol,
+.manual ul {
+  padding-left: 20px;
+}
+
+.manual li {
+  margin-bottom: 4px;
+}
+
+.manual p {
+  margin: 6px 0;
+}
+
 </style>
 </head>
 <body>
@@ -90,6 +127,12 @@
 
   <div class="logo-wrap">
   <img src="logo.png" alt="Ten Master HAYATE" class="logo">
+  </div>
+
+  <div class="row">
+   <a href="#manual" class="help-link">
+     📖 遊び方はコチラ
+  </a>
   </div>
 
   <div class="card">
@@ -137,6 +180,75 @@
     </div>
     <p class="label" style="margin:8px 0 0">記録はこのブラウザの中だけに保存されます。</p>
   </div>
+
+<div class="card manual" id="manual">
+  <h2>遊び方</h2>
+
+  <p>
+    「スタート」を押すと4つの数字が表示されます。<br>
+    4つの数字をすべて使い、計算結果を「10」にするゲームです。
+  </p>
+
+  <ol>
+    <li>難易度を選びます。</li>
+    <li>「スタート」を押します。</li>
+    <li>表示された数字の下にある「入力」ボタンを押して数字を選びます。</li>
+    <li>四則演算（＋・－・×・÷）のいずれかを押します。</li>
+    <li>再び数字の「入力」ボタンを押します。</li>
+    <li>上記を繰り返し、数字4個と記号3個を入力します。</li>
+    <li>「計算」ボタンを押します。</li>
+    <li>結果が10になれば正解です。</li>
+  </ol>
+
+  <h3>ルール</h3>
+
+  <ul>
+    <li>4つの数字はすべて使用してください。</li>
+    <li>計算は<FONT color="red">左から順番に</FONT>行われます。</li>
+    <li>同じ数字は2回使えません。</li>
+    <li>使用できる記号は「＋」「－」「×」「÷」です。</li>
+    <li>10になればクリアです。</li>
+  </ul>
+
+  <h3>ボタン説明</h3>
+
+  <ul>
+    <li><strong>スタート</strong>：問題を開始しタイマーをスタートします。</li>
+    <li><strong>ストップ</strong>：タイマーを停止します。</li>
+    <li><strong>入力</strong>：数字を計算式に追加します。</li>
+    <li><strong>＋ － × ÷</strong>：演算子を追加します。</li>
+    <li><strong>計算</strong>：入力した式を計算します。</li>
+    <li><strong>1つ戻す</strong>：最後に入力した数字または記号を削除します。</li>
+    <li><strong>クリア</strong>：入力中の式をすべて消去します。</li>
+    <li><strong>CSVでダウンロード</strong>：記録をCSVファイルとして保存します。</li>
+    <li><strong>記録を全部消す</strong>：保存された記録を削除します。</li>
+  </ul>
+
+  <h3>難易度</h3>
+
+  <ul>
+    <li><strong>かんたん</strong>：正解パターンが多い問題</li>
+    <li><strong>ふつう</strong>：標準的な問題</li>
+    <li><strong>むずかしい</strong>：正解パターンが少ない問題</li>
+  </ul>
+
+  <h3>記録について</h3>
+
+  <p>
+    正解するとクリアタイムが自動で保存されます。<BR>
+    記録はお使いのブラウザ内に保存されるため、<BR>
+    他の人に記録が見えることはありません。
+  </p>
+<BR>
+  <p>
+    疾風のごとく計算し、最速タイムを目指そう！
+  </p>
+</div>
+
+
+
+
+
 </main>
 
 <script>
@@ -352,7 +464,6 @@ function deleteRecords() {
     renderHistory();
   }
 }
-
 // ---------- イベント ----------
 $("startBtn").addEventListener("click", start);
 $("stopBtn").addEventListener("click", stop);

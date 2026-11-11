@@ -50,11 +50,36 @@
   .levels label { margin: 0 6px; cursor: pointer; }
   #timer { font-family: Consolas, "Courier New", monospace; font-size: 1.8rem; min-width: 8.5ch; text-align: right; }
   .digit { text-align: center; }
-  .digit .box {
+  /* .digit .box {
     width: 64px; height: 72px; line-height: 72px; font-size: 2.2rem; font-weight: 700;
     border: 2px solid var(--line); border-radius: 8px; background: var(--disp); margin-bottom: 6px;
   }
-  .digit button { width: 64px; padding: 6px 0; font-size: .85rem; }
+  .digit button { width: 64px; padding: 6px 0; font-size: .85rem; } */
+
+  .digit .box {
+  width: 70px;
+  height: 80px;
+
+  font-size: 2.2rem;
+  font-weight: 700;
+
+  border: 2px solid var(--line);
+  border-radius: 8px;
+
+  background: var(--disp);
+  color: var(--text);
+
+  cursor: pointer;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.digit .box:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
   .ops button { width: 60px; font-size: 1.5rem; padding: 6px 0; }
   .label { font-size: .8rem; color: var(--muted); text-align: center; margin-bottom: 4px; }
   #display {
@@ -120,6 +145,48 @@ a.help-link:active {
   margin: 6px 0;
 }
 
+.display-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+#display{
+  flex:1;
+  min-width:0;
+
+  min-height:56px;
+  font-size:1.7rem;
+  text-align:right;
+  padding:8px 12px;
+
+  border:2px solid var(--line);
+  border-radius:8px;
+
+  background:var(--disp);
+
+  overflow-x:auto;
+  white-space:nowrap;
+}
+
+#livePanel{
+  width:100px;          /* 固定幅 */
+  flex-shrink:0;        /* 潰れ防止 */
+  text-align:center;
+}
+
+.liveLabel{
+  font-size:0.8rem;
+  color:var(--muted);
+  margin-bottom:4px;
+}
+
+#liveResult{
+  font-size:1.5rem;
+  font-weight:bold;
+  min-height:1.8rem;
+}
+
 </style>
 </head>
 <body>
@@ -138,9 +205,9 @@ a.help-link:active {
   <div class="card">
     <div class="row levels" role="radiogroup" aria-label="難易度">
       <span>難易度:</span>
-      <label><input type="radio" name="level" value="かんたん"> かんたん</label>
-      <label><input type="radio" name="level" value="ふつう" checked> ふつう</label>
-      <label><input type="radio" name="level" value="むずかしい"> むずかしい</label>
+      <label><input type="radio" name="level" value="かんたん" checked> 易</label>
+      <label><input type="radio" name="level" value="ふつう"> 普</label>
+      <label><input type="radio" name="level" value="むずかしい"> 難</label>
     </div>
     <div class="row" style="margin-top:12px">
       <button class="primary" id="startBtn">スタート</button>
@@ -160,17 +227,27 @@ a.help-link:active {
   </div>
 
   <div class="card">
-    <div class="label">計算枠</div>
-    <div id="display"></div>
+    <div class="label"></div>
+  
+    <div class="display-row">
+      <div id="display"></div>
+  
+      <div id="livePanel">
+        <div class="liveLabel">現在値</div>
+        <div id="liveResult">―</div>
+      </div>
+    </div>
+  
     <div class="row" style="margin-top:12px">
       <button class="primary" id="calcBtn">計算</button>
       <button id="undoBtn">1つ戻す</button>
       <button id="clearBtn">クリア</button>
     </div>
+  
     <div id="result" aria-live="polite"></div>
     <div id="recordNote"></div>
   </div>
-
+  
   <div class="card">
     <h2>正解の記録</h2>
     <div id="history"></div>
@@ -192,9 +269,9 @@ a.help-link:active {
   <ol>
     <li>難易度を選びます。</li>
     <li>「スタート」を押します。</li>
-    <li>表示された数字の下にある「入力」ボタンを押して数字を選びます。</li>
+    <li>表示された数字を押して数字を選びます。</li>
     <li>四則演算（＋・－・×・÷）のいずれかを押します。</li>
-    <li>再び数字の「入力」ボタンを押します。</li>
+    <li>再び数字を押します。</li>
     <li>上記を繰り返し、数字4個と記号3個を入力します。</li>
     <li>「計算」ボタンを押します。</li>
     <li>結果が10になれば正解です。</li>
@@ -215,7 +292,6 @@ a.help-link:active {
   <ul>
     <li><strong>スタート</strong>：問題を開始しタイマーをスタートします。</li>
     <li><strong>ストップ</strong>：タイマーを停止します。</li>
-    <li><strong>入力</strong>：数字を計算式に追加します。</li>
     <li><strong>＋ － × ÷</strong>：演算子を追加します。</li>
     <li><strong>計算</strong>：入力した式を計算します。</li>
     <li><strong>1つ戻す</strong>：最後に入力した数字または記号を削除します。</li>
@@ -227,9 +303,9 @@ a.help-link:active {
   <h3>難易度</h3>
 
   <ul>
-    <li><strong>かんたん</strong>：正解パターンが多い問題</li>
-    <li><strong>ふつう</strong>：標準的な問題</li>
-    <li><strong>むずかしい</strong>：正解パターンが少ない問題</li>
+    <li><strong>易</strong>：正解パターンが多い問題</li>
+    <li><strong>普</strong>：標準的な問題</li>
+    <li><strong>難</strong>：正解パターンが少ない問題</li>
   </ul>
 
   <h3>記録について</h3>
@@ -306,6 +382,8 @@ function makeProblem(level) {
   }
 }
 
+
+
 // ---------- 記録（localStorage） ----------
 const KEY = "make10.records";
 function loadRecords() {
@@ -324,20 +402,97 @@ const SYM = { "+": "＋", "-": "－", "*": "×", "/": "÷" };
 const state = { digits: [], tokens: [], order: [], running: false, started: false, t0: 0, raf: 0, level: "ふつう" };
 
 const digitBoxes = [], digitBtns = [];
+// for (let i = 0; i < 4; i++) {
+//   const col = document.createElement("div");
+//   col.className = "digit";
+//   col.innerHTML = `<div class="box" aria-label="数字${i + 1}"></div><button disabled>入力</button>`;
+//   $("digits").appendChild(col);
+//   digitBoxes.push(col.querySelector(".box"));
+//   const b = col.querySelector("button");
+//   b.addEventListener("click", () => addNumber(i));
+//   digitBtns.push(b);
+// }
+
+// 「入力」ボタンではなく、数字をタップするように変更
 for (let i = 0; i < 4; i++) {
   const col = document.createElement("div");
   col.className = "digit";
-  col.innerHTML = `<div class="box" aria-label="数字${i + 1}"></div><button disabled>入力</button>`;
+
+  col.innerHTML =
+    `<button class="box" aria-label="数字${i + 1}" disabled></button>`;
+
   $("digits").appendChild(col);
-  digitBoxes.push(col.querySelector(".box"));
-  const b = col.querySelector("button");
+
+  const b = col.querySelector(".box");
+
   b.addEventListener("click", () => addNumber(i));
+
+  digitBoxes.push(b);
   digitBtns.push(b);
 }
 
+// function render() {
+//   $("display").textContent =
+//     state.tokens.map((t) => SYM[t] || t).join(" ");
+// }
+
 function render() {
-  $("display").textContent = state.tokens.map((t) => SYM[t] || t).join(" ");
+  $("display").textContent =
+    state.tokens.map((t) => SYM[t] || t).join(" ");
+
+  updateLiveResult();
 }
+
+
+// 現在値を追加
+function updateLiveResult() {
+
+const el = $("liveResult");
+
+if (state.tokens.length === 0) {
+  el.textContent = "―";
+  el.style.color = "var(--text)";
+  return;
+}
+
+// 数字だけ入力されている状態
+if (state.tokens.length === 1) {
+  el.textContent = state.tokens[0];
+  el.style.color = (Number(state.tokens[0]) === 10)
+    ? "var(--ok)"
+    : "var(--text)";
+  return;
+}
+
+// 演算子の直後は計算しない
+if (state.tokens.length % 2 === 0) {
+  return;
+}
+
+const r = calcLeftToRight(state.tokens);
+
+if (r === null) {
+  el.textContent = "ERR";
+  el.style.color = "var(--ng)";
+  return;
+}
+
+const value = r[0] / r[1];
+
+el.textContent =
+  Number.isInteger(value)
+    ? value
+    : value.toFixed(2);
+
+if (isTen(r)) {
+  el.style.color = "var(--ok)";
+} else {
+  el.style.color = "var(--text)";
+}
+}
+
+
+
 function setDigitButtons() {
   digitBtns.forEach((b, i) => {
     b.disabled = !(state.running && !state.order.includes(i));
@@ -378,12 +533,28 @@ function stop() {
   setDigitButtons();
   setResult("ストップ", "var(--muted)");
 }
+
+// function clearInput() {
+//   state.tokens = []; state.order = [];
+//   setResult("", "");
+//   $("recordNote").textContent = "";
+//   render(); setDigitButtons();
+// }
 function clearInput() {
-  state.tokens = []; state.order = [];
+  state.tokens = [];
+  state.order = [];
+
   setResult("", "");
   $("recordNote").textContent = "";
-  render(); setDigitButtons();
+
+  $("liveResult").textContent = "―";
+  $("liveResult").style.color = "var(--text)";
+
+  render();
+  setDigitButtons();
 }
+
+
 function setResult(text, color) {
   const r = $("result"); r.textContent = text; r.style.color = color;
 }
@@ -429,6 +600,9 @@ function calculate() {
       `${when.getFullYear()}年${when.getMonth() + 1}月${when.getDate()}日 ${pad(when.getHours())}:${pad(when.getMinutes())}:${pad(when.getSeconds())}　${rec.seconds}秒` +
       (saved ? "（記録しました）" : "（記録に失敗しました）");
     renderHistory();
+    $("liveResult").textContent = "―";
+    $("liveResult").style.color = "var(--text)";
+
   } else {
     setResult("残念", "var(--ng)");
   }

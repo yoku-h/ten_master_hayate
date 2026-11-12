@@ -205,10 +205,23 @@ a.help-link:active {
   <div class="card">
     <div class="row levels" role="radiogroup" aria-label="難易度">
       <span>難易度:</span>
-      <label><input type="radio" name="level" value="かんたん" checked> 易</label>
-      <label><input type="radio" name="level" value="ふつう"> 普</label>
-      <label><input type="radio" name="level" value="むずかしい"> 難</label>
+      <label><input type="radio" name="level" value="易" checked> 易</label>
+      <label><input type="radio" name="level" value="普"> 普</label>
+      <label><input type="radio" name="level" value="難"> 難</label>
     </div>
+    
+    <div class="row" style="margin-bottom:10px">
+      <span>名前:</span>
+      <input
+        id="playerName"
+        type="text"
+        maxlength="20"
+        value="名無しさん"
+      >
+    </div>
+
+
+
     <div class="row" style="margin-top:12px">
       <button class="primary" id="startBtn">スタート</button>
       <button id="stopBtn">ストップ</button>
@@ -248,6 +261,15 @@ a.help-link:active {
     <div id="recordNote"></div>
   </div>
   
+  <div class="card">
+    <h2>🏆 世界ランキング TOP100</h2>
+    <div id="ranking">読み込み中...</div>
+  </div>
+
+
+
+
+
   <div class="card">
     <h2>正解の記録</h2>
     <div id="history"></div>
@@ -327,8 +349,29 @@ a.help-link:active {
 
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
 <script>
 "use strict";
+
+// 名前を保存
+const savedPlayerName =
+  localStorage.getItem("playerName");
+// ランキング表示
+const SUPABASE_URL =
+  "https://mwcriyoebhenrcpssqsq.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_IRGzQY-_9OwvNFFEIuGMgg_3BQeLRg5";
+
+const supabaseClient =
+  supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+// ここまで
+
+
 
 // ---------- 計算（分数で正確に） ----------
 const gcd = (a, b) => (b === 0 ? Math.abs(a) : gcd(b, a % b));
@@ -370,9 +413,9 @@ function countSolutions(digits) {
 }
 // 難易度 = 10になる式の数。多いほど簡単
 const LEVELS = {
-  "かんたん": (n) => n >= 30,
-  "ふつう": (n) => n >= 4 && n <= 29,
-  "むずかしい": (n) => n >= 1 && n <= 3,
+  "易": (n) => n >= 30,
+  "普": (n) => n >= 4 && n <= 29,
+  "難": (n) => n >= 1 && n <= 3,
 };
 function makeProblem(level) {
   const ok = LEVELS[level];
@@ -594,18 +637,133 @@ function calculate() {
       digits: state.digits.join(" "),
       expr: state.tokens.map((t) => SYM[t] || t).join(""),
     };
-    const list = loadRecords(); list.push(rec);
-    const saved = saveRecords(list);
-    $("recordNote").textContent =
-      `${when.getFullYear()}年${when.getMonth() + 1}月${when.getDate()}日 ${pad(when.getHours())}:${pad(when.getMinutes())}:${pad(when.getSeconds())}　${rec.seconds}秒` +
-      (saved ? "（記録しました）" : "（記録に失敗しました）");
-    renderHistory();
-    $("liveResult").textContent = "―";
-    $("liveResult").style.color = "var(--text)";
+
+
+  // ① ローカル記録を先に保存・表示
+  const list = loadRecords(); list.push(rec);
+  const saved = saveRecords(list);
+  $("recordNote").textContent =
+    `${when.getFullYear()}年${when.getMonth() + 1}月${when.getDate()}日 ${pad(when.getHours())}:${pad(when.getMinutes())}:${pad(when.getSeconds())}　${rec.seconds}秒` +
+    (saved ? "（記録しました）" : "（記録に失敗しました）");
+  renderHistory();
+
+  $("liveResult").textContent = "―";
+  $("liveResult").style.color = "var(--text)";
+
+  // ② Supabaseへ保存し、完了後にランキングを自動更新
+  supabaseClient
+    .from("scores")
+    .insert({
+      player_name: $("playerName").value || "名無しさん",
+      seconds: Number(rec.seconds),
+      level: rec.level
+    })
+    .then(({ error }) => {
+      if (error) {
+        console.error(error);
+        $("recordNote").textContent += "（ランキング送信失敗）";
+      } else {
+        console.log("Supabase保存成功");
+        // ★ 保存が終わってからランキングを再取得する
+        loadRanking();
+      }
+    });
+
+
+
+
+
+
+
+
+
+
+
+  // supabaseClient
+  //   .from("scores")
+  //   .insert({
+  //     player_name: $("playerName").value || "名無しさん",
+  //     seconds: Number(rec.seconds),
+  //     level: rec.level
+  //   })
+  //   .then(({ error }) => {
+  //     if (error) {
+  //       console.error(error);
+  //     } else {
+  //       console.log("Supabase保存成功");
+  //     }
+  //   });
+
+  //   const list = loadRecords(); list.push(rec);
+  //   const saved = saveRecords(list);
+  //   $("recordNote").textContent =
+  //     `${when.getFullYear()}年${when.getMonth() + 1}月${when.getDate()}日 ${pad(when.getHours())}:${pad(when.getMinutes())}:${pad(when.getSeconds())}　${rec.seconds}秒` +
+  //     (saved ? "（記録しました）" : "（記録に失敗しました）");
+  //   renderHistory();
+  //   // loadRanking();
+  //   // $("liveResult").textContent = "―";
+  //   // $("liveResult").style.color = "var(--text)";
 
   } else {
-    setResult("残念", "var(--ng)");
+    setResult("✖", "var(--ng)");
   }
+}
+
+async function loadRanking() {
+
+  const { data, error } =
+    await supabaseClient
+      .from("scores")
+      .select("*")
+      .order("seconds", { ascending: true })
+      .limit(100);
+
+  if (error) {
+
+    $("ranking").innerHTML =
+      "ランキング取得失敗<br>" +
+      error.message;
+
+    console.error(error);
+
+    return;
+  }
+
+  let html =
+    "<table>" +
+    "<tr>" +
+    "<th>順位</th>" +
+    "<th>名前</th>" +
+    "<th>秒</th>" +
+    "<th>難易度</th>" +
+    "<th>日時</th>" +
+    "</tr>";
+
+  data.forEach((row, i) => {
+
+    // html +=
+    //   "<tr>" +
+    //   "<td>" + (i + 1) + "</td>" +
+    //   "<td>" + row.player_name + "</td>" +
+    //   "<td>" + row.seconds + "</td>" +
+    //   "<td>" + row.level + "</td>" +
+    //   "</tr>";
+    html +=
+      "<tr>" +
+      "<td>" + (i + 1) + "</td>" +
+      "<td>" + row.player_name + "</td>" +
+      "<td>" + row.seconds + "</td>" +
+      "<td>" + row.level + "</td>" +
+      "<td>" +
+        new Date(row.cleared_at).toLocaleDateString("ja-JP") +
+      "</td>" +
+      "</tr>";
+
+  });
+
+  html += "</table>";
+
+  $("ranking").innerHTML = html;
 }
 
 // ---------- 記録の表示・CSV ----------
@@ -647,7 +805,26 @@ $("clearBtn").addEventListener("click", clearInput);
 $("csvBtn").addEventListener("click", downloadCsv);
 $("delBtn").addEventListener("click", deleteRecords);
 document.querySelectorAll("#ops button").forEach((b) => b.addEventListener("click", () => addOp(b.dataset.op)));
+
+if (savedPlayerName) {
+  $("playerName").value = savedPlayerName;
+}
+
+$("playerName").addEventListener(
+  "input",
+  () => {
+    localStorage.setItem(
+      "playerName",
+      $("playerName").value
+    );
+  }
+);
+
 renderHistory();
+loadRanking();
+
+
 </script>
+
 </body>
 </html>

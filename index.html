@@ -216,7 +216,7 @@ a.help-link:active {
         id="playerName"
         type="text"
         maxlength="20"
-        value="名無しさん"
+        value="名無し"
       >
     </div>
 
@@ -262,13 +262,9 @@ a.help-link:active {
   </div>
   
   <div class="card">
-    <h2>🏆 世界ランキング TOP100（公開）</h2>
+    <h2>🏆 世界ランキング（難易度別 TOP20）</h2>
     <div id="ranking">読み込み中...</div>
   </div>
-
-
-
-
 
   <div class="card">
     <h2>正解の記録（非公開）</h2>
@@ -342,11 +338,6 @@ a.help-link:active {
     颯のごとく計算し、最速タイムを目指そう！
   </p>
 </div>
-
-
-
-
-
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
@@ -370,8 +361,6 @@ const supabaseClient =
     SUPABASE_KEY
   );
 // ここまで
-
-
 
 // ---------- 計算（分数で正確に） ----------
 const gcd = (a, b) => (b === 0 ? Math.abs(a) : gcd(b, a % b));
@@ -534,8 +523,6 @@ if (isTen(r)) {
 }
 }
 
-
-
 function setDigitButtons() {
   digitBtns.forEach((b, i) => {
     b.disabled = !(state.running && !state.order.includes(i));
@@ -669,41 +656,6 @@ function calculate() {
       }
     });
 
-
-
-
-
-
-
-
-
-
-
-  // supabaseClient
-  //   .from("scores")
-  //   .insert({
-  //     player_name: $("playerName").value || "名無しさん",
-  //     seconds: Number(rec.seconds),
-  //     level: rec.level
-  //   })
-  //   .then(({ error }) => {
-  //     if (error) {
-  //       console.error(error);
-  //     } else {
-  //       console.log("Supabase保存成功");
-  //     }
-  //   });
-
-  //   const list = loadRecords(); list.push(rec);
-  //   const saved = saveRecords(list);
-  //   $("recordNote").textContent =
-  //     `${when.getFullYear()}年${when.getMonth() + 1}月${when.getDate()}日 ${pad(when.getHours())}:${pad(when.getMinutes())}:${pad(when.getSeconds())}　${rec.seconds}秒` +
-  //     (saved ? "（記録しました）" : "（記録に失敗しました）");
-  //   renderHistory();
-  //   // loadRanking();
-  //   // $("liveResult").textContent = "―";
-  //   // $("liveResult").style.color = "var(--text)";
-
   } else {
     setResult("✖", "var(--ng)");
   }
@@ -715,56 +667,92 @@ async function loadRanking() {
     await supabaseClient
       .from("scores")
       .select("*")
-      .order("seconds", { ascending: true })
-      .limit(100);
+      .order("seconds", { ascending: true });
 
   if (error) {
-
     $("ranking").innerHTML =
       "ランキング取得失敗<br>" +
       error.message;
-
-    console.error(error);
-
     return;
   }
 
-  let html =
-    "<table>" +
-    "<tr>" +
-    "<th>順位</th>" +
-    "<th>名前</th>" +
-    "<th>秒</th>" +
-    "<th>難易度</th>" +
-    "<th>日時</th>" +
-    "</tr>";
+  const levels = ["易", "普", "難"];
 
-  data.forEach((row, i) => {
+  let html = "";
 
-    // html +=
-    //   "<tr>" +
-    //   "<td>" + (i + 1) + "</td>" +
-    //   "<td>" + row.player_name + "</td>" +
-    //   "<td>" + row.seconds + "</td>" +
-    //   "<td>" + row.level + "</td>" +
-    //   "</tr>";
-    html +=
-      "<tr>" +
-      "<td>" + (i + 1) + "</td>" +
-      "<td>" + row.player_name + "</td>" +
-      "<td>" + row.seconds + "</td>" +
-      "<td>" + row.level + "</td>" +
-      "<td>" +
-        new Date(row.cleared_at).toLocaleDateString("ja-JP") +
-      "</td>" +
-      "</tr>";
+  levels.forEach(level => {
 
+    const rows = data
+      .filter(r => r.level === level)
+      .slice(0, 20);
+
+    // html += `<h3>${level} TOP20</h3>`;
+
+      let color = "#ffffff";
+
+      if (level === "易") color = "#4ade80";
+      if (level === "普") color = "#facc15";
+      if (level === "難") color = "#f87171";
+
+      // html += `
+      // <h3 style="
+      //   color:${color};
+      //   text-align:center;
+      //   margin-top:20px;
+      //   margin-bottom:10px;
+      // ">
+      // ${level} TOP20
+      // </h3>
+      // `;
+
+
+    html += `
+    <div style="
+      background:#0f172a;
+      border:2px solid ${color};
+      border-radius:12px;
+      padding:10px;
+      margin-bottom:20px;
+    ">
+    <h3 style="
+      color:${color};
+      text-align:center;
+      margin-top:0;
+    ">
+    ${level} TOP20
+    </h3>
+    `;
+
+
+
+    html += `
+    <table>
+      <tr>
+        <th>順位</th>
+        <th>名前</th>
+        <th>秒</th>
+        <th>日時</th>
+      </tr>
+    `;
+
+    rows.forEach((row, i) => {
+
+      html += `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${row.player_name}</td>
+        <td>${row.seconds}</td>
+        <td>${new Date(row.cleared_at).toLocaleDateString("ja-JP")}</td>
+      </tr>
+      `;
+    });
+    html += "</table></div>";
+    // html += "</table><br>";
   });
-
-  html += "</table>";
 
   $("ranking").innerHTML = html;
 }
+
 
 // ---------- 記録の表示・CSV ----------
 function renderHistory() {
